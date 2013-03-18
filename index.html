@@ -22,9 +22,6 @@
 	body { margin:0; padding:0; border:0; background:black; overflow:hidden; }
 	div { position:absolute; margin:0; padding:0; border:0; outline:0; 
 		font-family:arial; font-size:12px; color:white; text-align:center; }
-	#header { width:100%; top:24px; left:0px; }
-	#header a { color:white; }
-	#stats { width:100%; bottom:24px; left:0px; }
 	#playbutton { position:absolute; top:50%; left:50%; margin-left:-137px; 
 		margin-top:-25px; width:256px; height:32px; padding:16px; border-radius:16px; 
 		border:2px solid black; background:#666666; color:white; 
@@ -32,25 +29,20 @@
 		font-family:arial; font-weight:bold; text-align:center; }
 	#playbutton:hover { background:red; }
 	#viewport { width:100%; height:100%; overflow:hidden; 
-		top:0%; left:0%;}
-	#level { width:2048px; height:100%; top:0px; left:0px; }
+		top:0%; left:0%; display:block;}
+	#level { width:100%; height:100%; top:0px; left:0px;}
 	#background { width:100%; height:100%; top:0px; left:0px; 
-		background:url(bgtile.jpg); }
-	.sprite { background-image:url(spritesheet.png); width:1.5%; height:3%; }
-	.mouth {background-color:black;width:50px;height:100px;left:5%;top:45%;}
+		background:url(bgtile.jpg); background-size: 100% 100%; }
+	.sprite { background-size:100%;width:10%; height:8%; }
+	.mouth {background-color:black;width:3%;height:15%;left:5%;top:45%;}
+	#stats {top:5%; left: 5%;}
 </style>
 <script type="text/javascript" src="jquery-1.6.4.min.js"></script>
 <script type="text/javascript" src="jquery-collision.min.js"></script>
 </head>
 <body>
 
-<div id='header'>
-HTML5 dom sprite rendering benchmark - 
-Not using canvas: each sprite is a DIV - 
-by <a target='_parent' href='http://twitter.com/McFunkypants'>McFunkypants</a> - 
-Icons by Ails (cc)</a></div>
-
-<div id='viewport'><div id='background'><div id='level'></div></div></div>
+<div id='viewport' height='480' width='800'><div id='background'><div id='level'><div id="stats"></div></div></div></div>
 
 <a id='playbutton' href='javascript:startBenchmark()'>Click to start</a>
 
@@ -65,10 +57,29 @@ var background = document.getElementById('background');
 var stats = document.getElementById('stats');
 var playbutton = document.getElementById('playbutton');
 var mouth = new Mouth();
+var scaledHeight = $(viewport).height();
+var scaledWidth = $(viewport).width();
+		
+var scaleW = scaledWidth / 800;
+var scaleH = scaledHeight / 480;
+
+
+var score = 0;
+				
+
+
+var detect = false;	
 
 
  $(viewport).bind("mousemove", function(event) {	
+			if (detect == true)
 			mouth.y=event.pageY;
+		  });
+ $(viewport).bind("mousedown", function(event) {	
+			detect = true;
+		  });
+ $(viewport).bind("mouseup", function(event) {	
+			detect = false;
 		  });
 		 
  $(viewport).bind("touchmove", function(event) {	
@@ -80,6 +91,16 @@ var mouth = new Mouth();
 			mouth.y=mouseY;
 		  });
 
+		   $(viewport).bind("touchstart", function(event) {	
+			event.preventDefault();
+			detect = true;
+		  });
+		  
+		   $(viewport).bind("touchend", function(event) {	
+			event.preventDefault();
+			detect = false;
+
+		  });
 
 		 
 		  
@@ -95,8 +116,10 @@ var j =1;
 if (j< sprites.length) {
 
 		for (var i = 0; i < sprites.length; ++i) {
-			 if(collides(sprites[i],mouth)){
-					  sprites[i].xSpeed = -1 * sprites[i].xSpeed;
+			 if((detect == true) && (collides(sprites[i],mouth)) && (sprites[i].active == true)){
+					   sprites[i].active = false;
+					   sprites[i].style.visibility="hidden";
+					   score+=10;
 					}
 		}
 
@@ -113,14 +136,6 @@ var spriteCount = 0;
 
 
 
-// SPRITESHEET: all sprite frames stored in a single image
-var spritesheetWidth = 256;
-var spritesheetHeight = 256;
-var spritesheetFrameWidth = 32;
-var spritesheetFrameHeight = 32;
-var spritesheetXFrames = spritesheetWidth / spritesheetFrameWidth;
-var spritesheetYFrames = spritesheetHeight / spritesheetFrameHeight;
-var spritesheetFrames = spritesheetXFrames * spritesheetYFrames;
 
 // can this web brower handle CSS3 transforms (to trigger HW accel?)
 var has3d = ('WebKitCSSMatrix' in window && 'm11' in new WebKitCSSMatrix());
@@ -148,28 +163,22 @@ if (!window.requestAnimationFrame)
 // add or remove sprites depending on the FPS
 function maybeMoreSprites()
 {
-
 			// add one new animated sprite
 			sprites[spriteCount] = new Sprite();
 			spriteCount++;
-	
-
 }
 
 // measure the framerate and add/remove sprites
 // depending on how fast we're animating
 function checkFPS() 
 {
-	
-		
 		// add more sprites if possible
 		// only done once per second so we aren't touching
 		// the DOM every single frame
-		if(sprites.length < 30){
+		if(spriteCount < 30){
 		if(Math.random() < 0.019) {
 			//brains.push(Brain());
 			maybeMoreSprites();
-	
 		}
 	}
 	
@@ -179,7 +188,6 @@ function checkFPS()
 function repositionSprite()
 {
 	if (!this) return;
-	
 	// CSS3 version - forces hardware accel on mobile
 	// Surprisingly, this is SLOWER on PC Windows using Chrome	
 	// but may be faster on iOS and other mobile platforms
@@ -199,10 +207,7 @@ function repositionSprite()
 function changeSpriteFrame(num)
 {
 	if (!this) return;
-	this.style.backgroundPosition = 
-		(-1 * (num % spritesheetXFrames) * spritesheetFrameWidth + 'px ') +
-		(-1 * (Math.round(num / spritesheetXFrames) % spritesheetYFrames)) 
-		* spritesheetFrameHeight + 'px ';
+	this.style.background = "url('brain2.png')";
 }
 
 // removes a sprite from a container DOM element
@@ -232,13 +237,17 @@ function Sprite(parentElement)
 		this.x = viewportW;
 		this.y = Math.round(viewportH/2);
 
-		this.width=32;
-		this.height=32;
+		this.width=50;
+		this.height=38;
+		
+		this.age = Math.round(Math.random() * 32);
+		
+		this.active = true;
 		
 	this.reposition();
 	// give it a random speed
-	this.xSpeed = Math.round(Math.random() * 10) - 5;
-	this.ySpeed = Math.round(Math.random() * 10) - 5;
+	this.xSpeed = -(Math.round(Math.random() * (5 - 2 + 1)) + 2);
+	this.ySpeed = 0;
 	// no still sprites
 	if (this.xSpeed == 0) this.xSpeed  = 1;
 	if (this.ySpeed == 0) this.ySpeed  = 1;
@@ -281,25 +290,48 @@ this.reposition = repositionSprite;
 
 
 
+
+
 // update the positions of each sprite
 function animateSprites()
 {
 	for (var loop=0; loop < spriteCount; loop++)
 	{
+	
+		sprites[loop].ySpeed = Math.round( -2.3 * Math.sin(sprites[loop].age * Math.PI / 50));
+		sprites[loop].age++;
+		
 		sprites[loop].x += sprites[loop].xSpeed;
 		sprites[loop].y += sprites[loop].ySpeed;
 		
-		// bounce at edges
-		if ((sprites[loop].x <= 0) || (sprites[loop].x >= viewportW))
-			sprites[loop].xSpeed = -1 * sprites[loop].xSpeed;
-		if ((sprites[loop].y <= 0) || (sprites[loop].y >= viewportH))
-			sprites[loop].ySpeed = -1 * sprites[loop].ySpeed;
-		
+	
 		sprites[loop].reposition();
+		// bounce at edges
+
+
+			//sprites[loop].destroy();
+		
+		
 	}
-	mouth.reposition();
+	
 
 }
+
+
+function clearSprites()
+{
+var len = sprites.length;
+while (len--) {
+
+		if (sprites[len].x < 0 || sprites[len].x > viewportW){
+				sprites[len].destroy();
+				sprites.splice(len,1);
+				spriteCount--;
+		}
+}
+
+}
+
 
 // run each frame
 function animate() 
@@ -311,6 +343,9 @@ function animate()
 	handleCollisions();
 	// bounce the sprites around and scroll the level
 	animateSprites();
+	clearSprites();
+    $(stats).html("Score: " + score); 
+	mouth.reposition();
 }
 
 // start your engines!
@@ -318,7 +353,6 @@ function startBenchmark()
 {
 	playbutton.style.display = 'none';
 	animate();
-	
 }
 
 </script>
