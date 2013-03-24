@@ -33,16 +33,23 @@
 	#level { width:100%; height:100%; top:0px; left:0px;}
 	#background { width:100%; height:100%; top:0px; left:0px; 
 		background:url(bgtile.jpg); background-size: 100% 100%; }
-	.sprite { background-size:100%;width:10%; height:8%; }
-	.mouth {background-color:black;width:3%;height:15%;left:5%;top:45%;}
-	#stats {top:5%; left: 5%;}
+	.brain {background: url('brain2.png') no-repeat; background-size: 100% 100%; width:12%; height:10%;z-index:11;}
+	.candy {background-size: 100% 100%; width:9%; height:15%;z-index:11;}
+	.mouth {width:3%;height:15%;left:5%;top:45%;z-index:10;}
+	#zombie {background-image: url('img/zombie1.png'); background-size: 100% 100%; width:18%;height:100%;left:2%;top:1%;z-index:9;}
+	#stats {top:5%; left: 85%;z-index:0; -webkit-touch-callout: none;
+-webkit-user-select: none;
+-khtml-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;}
 </style>
 <script type="text/javascript" src="jquery-1.6.4.min.js"></script>
 <script type="text/javascript" src="jquery-collision.min.js"></script>
 </head>
 <body>
 
-<div id='viewport' height='480' width='800'><div id='background'><div id='level'><div id="stats"></div></div></div></div>
+<div id='viewport' height='480' width='800'><div id='background'><div id='level'><div id="zombie"></div><div id="stats"></div></div></div></div>
 
 <a id='playbutton' href='javascript:startBenchmark()'>Click to start</a>
 
@@ -57,38 +64,49 @@ var background = document.getElementById('background');
 var stats = document.getElementById('stats');
 var playbutton = document.getElementById('playbutton');
 var mouth = new Mouth();
+var zombie = document.getElementById('zombie');
 var scaledHeight = $(viewport).height();
 var scaledWidth = $(viewport).width();
+
+
 		
 var scaleW = scaledWidth / 800;
 var scaleH = scaledHeight / 480;
 
 
+
+
 var score = 0;
 				
-
+//----------------------------------------------MOVEMENT
 
 var detect = false;	
-
+var support = Math.round(2.3*mouth.height);
 
  $(viewport).bind("mousemove", function(event) {	
-			if (detect == true)
+			if (detect == true){
 			mouth.y=event.pageY;
+			$(zombie).css('top', mouth.y - support);
+			}
 		  });
  $(viewport).bind("mousedown", function(event) {	
 			detect = true;
+			$(zombie).css('background-image', 'url("img/zombie2.png")');
 		  });
  $(viewport).bind("mouseup", function(event) {	
 			detect = false;
+			$(zombie).css('background-image', 'url("img/zombie1.png")');
 		  });
 		 
  $(viewport).bind("touchmove", function(event) {	
 			event.preventDefault();
 
 		    var touch = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0];
-
+			if (detect == true){
 			mouseY = Math.floor(touch.pageY);
 			mouth.y=mouseY;
+			$(zombie).css('top', mouth.y - support);
+			}
 		  });
 
 		   $(viewport).bind("touchstart", function(event) {	
@@ -102,7 +120,7 @@ var detect = false;
 
 		  });
 
-		 
+//----------------------------------------------COLLISION DETECTION	 
 		  
  function collides(a, b) {
           return a.x < b.x + b.width &&
@@ -113,35 +131,47 @@ var detect = false;
 		
 function handleCollisions(){
 var j =1;
-if (j< sprites.length) {
+if (j< brains.length) {
 
-		for (var i = 0; i < sprites.length; ++i) {
-			 if((detect == true) && (collides(sprites[i],mouth)) && (sprites[i].active == true)){
-					   sprites[i].active = false;
-					   sprites[i].style.visibility="hidden";
+		for (var i = 0; i < brains.length; ++i) {
+			 if((detect == true) && (collides(brains[i],mouth)) && (brains[i].active == true)){
+					   brains[i].active = false;
+					   brains[i].style.visibility="hidden";
 					   score+=10;
 					}
 		}
+}
+
+if (j< candies.length) {
+
+		for (var i = 0; i < candies.length; ++i) {
+			 if((detect == true) && (collides(candies[i],mouth)) && (candies[i].active == true)){
+					   candies[i].active = false;
+					   candies[i].style.visibility="hidden";
+					   score-=10;
+					}
+		}
+}
 
 }
- }
 // size of the the viewport and the larger level within
 var viewportW = viewport.clientWidth;
 var viewportH = viewport.clientHeight;
 
-// sprite batches - one for moving sprites 
+// sprite batches - one for moving brains 
 // and another for static level geometry
-var sprites = [];
-var spriteCount = 0;
+var brains = [];
+var brainCount = 0;
 
-
+var candies = [];
+var candyCount = 0;
 
 
 // can this web brower handle CSS3 transforms (to trigger HW accel?)
 var has3d = ('WebKitCSSMatrix' in window && 'm11' in new WebKitCSSMatrix());
 if (window.console) console.log ('Browser is capable of CSS3 transform3d:'+has3d);
 // but should we use it?
-var use3d = false;
+var use3d = true;
 
 // ensure that we have requestAnimationFrame
 // this is Paul Irish's compatibility shim
@@ -160,25 +190,38 @@ if (!window.requestAnimationFrame)
 	})();
 }
 
-// add or remove sprites depending on the FPS
-function maybeMoreSprites()
+// add or remove brains depending on the FPS
+function addBrain()
 {
 			// add one new animated sprite
-			sprites[spriteCount] = new Sprite();
-			spriteCount++;
+			brains[brainCount] = new Sprite();
+			brainCount++;
 }
 
-// measure the framerate and add/remove sprites
-// depending on how fast we're animating
-function checkFPS() 
+function addCandy()
 {
-		// add more sprites if possible
+			// add one new animated sprite
+			candies[candyCount] = new Sprite2();
+			candyCount++;
+}
+
+// measure the framerate and add/remove brains
+// depending on how fast we're animating
+function addItems() 
+{
+		// add more brains if possible
 		// only done once per second so we aren't touching
 		// the DOM every single frame
-		if(spriteCount < 30){
+		if(brainCount < 30){
 		if(Math.random() < 0.019) {
 			//brains.push(Brain());
-			maybeMoreSprites();
+			addBrain();
+		}
+		if(candyCount < 5){
+		if(Math.random() < 0.006) {
+			//brains.push(Brain());
+			addCandy();
+		}
 		}
 	}
 	
@@ -197,7 +240,7 @@ function repositionSprite()
 	}
 	else
 	{
-		this.style.left = this.x + 'px';
+		this.style.left = (this.x) + 'px';
 		this.style.top = this.y + 'px';
 	}
 }
@@ -207,7 +250,8 @@ function repositionSprite()
 function changeSpriteFrame(num)
 {
 	if (!this) return;
-	this.style.background = "url('brain2.png')";
+	this.style.background = "url('brain2.png') no-repeat";
+	this.style.backgroundSize="100% 100%";
 }
 
 // removes a sprite from a container DOM element
@@ -217,18 +261,20 @@ function destroySprite()
 	this.parent.removeChild(this.element);
 }
 
+
+
 // the sprite class - DOM sprite version
 function Sprite(parentElement)
 {
 	// function references
 	this.reposition = repositionSprite;
-	this.frame = changeSpriteFrame;
+	//this.frame = changeSpriteFrame;
 	this.destroy = destroySprite;
 	// where do this sprite live? (default: viewport)
 	this.parent = parentElement ? parentElement : viewport;
 	// create a DOM sprite
 	this.element = document.createElement("div");
-	this.element.className = 'sprite';
+	this.element.className = 'brain';
 	// optimized pointer to style object
 	this.style = this.element.style;
 	// random starting position
@@ -237,8 +283,11 @@ function Sprite(parentElement)
 		this.x = viewportW;
 		this.y = Math.round(viewportH/2);
 
-		this.width=50;
-		this.height=38;
+		scaledHeight = $(viewport).height();
+		scaledWidth = $(viewport).width();
+		
+		this.width=Math.round(scaledWidth*0.15);
+		this.height=Math.round(scaledHeight*0.1);
 		
 		this.age = Math.round(Math.random() * 32);
 		
@@ -246,13 +295,61 @@ function Sprite(parentElement)
 		
 	this.reposition();
 	// give it a random speed
-	this.xSpeed = -(Math.round(Math.random() * (5 - 2 + 1)) + 2);
+	this.xSpeed = -(Math.round(Math.random() * (8 - 2 + 1)) + 4);
 	this.ySpeed = 0;
-	// no still sprites
-	if (this.xSpeed == 0) this.xSpeed  = 1;
-	if (this.ySpeed == 0) this.ySpeed  = 1;
 	// random spritesheet frame
-	this.frame(spriteCount);
+	//this.frame(brainCount);
+	// put it into the game window
+	this.parent.appendChild(this.element);
+}
+
+
+function Sprite2(parentElement)
+{
+	// function references
+	this.reposition = repositionSprite;
+	//this.frame = changeSpriteFrame;
+	this.destroy = destroySprite;
+	// where do this sprite live? (default: viewport)
+	this.parent = parentElement ? parentElement : viewport;
+	// create a DOM sprite
+	this.element = document.createElement("div");
+	this.element.className = 'candy';
+	// optimized pointer to style object
+	this.style = this.element.style;
+	// random starting position
+// regular sprite in the viewport
+
+		which_sprite = Math.floor(Math.random() * 2) + 1;
+		  
+		  if (which_sprite==1){
+          this.style.background = "url('img/candy.png') no-repeat";
+		  this.style.backgroundSize="100% 100%";
+		  }
+		  else{
+		  this.style.background = "url('img/candy2.png') no-repeat";
+		  this.style.backgroundSize="100% 100%";
+		  }
+	
+		this.x = viewportW;
+		this.y = Math.round(viewportH/2);
+
+		scaledHeight = $(viewport).height();
+		scaledWidth = $(viewport).width();
+		
+		this.width=Math.round(scaledWidth*0.15);
+		this.height=Math.round(scaledHeight*0.1);
+		
+		this.age = Math.round(Math.random() * 32);
+		
+		this.active = true;
+		
+	this.reposition();
+	// give it a random speed
+	this.xSpeed = -(Math.round(Math.random() * (8 - 2 + 1)) + 2);
+	this.ySpeed = 0;
+	// random spritesheet frame
+	//this.frame(brainCount);
 	// put it into the game window
 	this.parent.appendChild(this.element);
 }
@@ -261,7 +358,7 @@ function Sprite(parentElement)
 
 function Mouth(parentElement)
 {
-this.reposition = repositionSprite;
+	this.reposition = repositionSprite;
 	// where do this sprite live? (default: viewport)
 	this.parent = parentElement ? parentElement : viewport;
 	// create a DOM sprite
@@ -272,11 +369,14 @@ this.reposition = repositionSprite;
 	// random starting position
 // regular sprite in the viewport
 	
-		this.x = 50;
+		scaledHeight = $(viewport).height();
+		scaledWidth = $(viewport).width();
+	
+		this.x = Math.round(scaledWidth*0.06);
 		this.y = Math.round(viewportH/2);
 		
-		this.width=50;
-		this.height=100;
+		this.width=Math.round(scaledWidth*0.03);
+		this.height=Math.round(scaledHeight*0.15);
 		
 		this.reposition();
 	// put it into the game window
@@ -288,47 +388,57 @@ this.reposition = repositionSprite;
 
 
 
-
-
-
-
 // update the positions of each sprite
 function animateSprites()
 {
-	for (var loop=0; loop < spriteCount; loop++)
+	for (var loop=0; loop < brainCount; loop++)
 	{
 	
-		sprites[loop].ySpeed = Math.round( -2.3 * Math.sin(sprites[loop].age * Math.PI / 50));
-		sprites[loop].age++;
+		brains[loop].ySpeed = Math.round( -2.3 * Math.sin(brains[loop].age * Math.PI / 240));
+		brains[loop].age++;
 		
-		sprites[loop].x += sprites[loop].xSpeed;
-		sprites[loop].y += sprites[loop].ySpeed;
-		
-	
-		sprites[loop].reposition();
-		// bounce at edges
+		brains[loop].x += brains[loop].xSpeed;
+		brains[loop].y += brains[loop].ySpeed;
 
-
-			//sprites[loop].destroy();
-		
-		
+		brains[loop].reposition();	
 	}
 	
+	for (var loop=0; loop < candyCount; loop++)
+	{
+	
+		candies[loop].ySpeed = Math.round( -7 * Math.sin(candies[loop].age * Math.PI / 120));
+		candies[loop].age++;
+		
+		candies[loop].x += candies[loop].xSpeed;
+		candies[loop].y += candies[loop].ySpeed;
 
+		candies[loop].reposition();	
+	}
 }
 
 
 function clearSprites()
 {
-var len = sprites.length;
-while (len--) {
+var len = brains.length;
 
-		if (sprites[len].x < 0 || sprites[len].x > viewportW){
-				sprites[len].destroy();
-				sprites.splice(len,1);
-				spriteCount--;
-		}
-}
+	while (len--) {
+
+			if (brains[len].x < 0 || brains[len].x > viewportW){
+					brains[len].destroy();
+					brains.splice(len,1);
+					brainCount--;
+			}
+	}
+	
+len = candies.length;
+
+	while (len--){
+		if (candies[len].x < 0 || candies[len].x > viewportW){
+					candies[len].destroy();
+					candies.splice(len,1);
+					candyCount--;
+			}
+	}
 
 }
 
@@ -338,14 +448,15 @@ function animate()
 {
 	// call this function again asap
 	requestAnimationFrame(animate);
-	// measure time and add or remove sprites
-	checkFPS();
+	// measure time and add or remove brains
+	addItems();
 	handleCollisions();
-	// bounce the sprites around and scroll the level
+	// bounce the brains around and scroll the level
 	animateSprites();
 	clearSprites();
     $(stats).html("Score: " + score); 
 	mouth.reposition();
+	
 }
 
 // start your engines!
