@@ -112,11 +112,13 @@ var support = Math.round(2.3*mouth.height);
 		   $(viewport).bind("touchstart", function(event) {	
 			event.preventDefault();
 			detect = true;
+			$(zombie).css('background-image', 'url("img/zombie2.png")');
 		  });
 		  
 		   $(viewport).bind("touchend", function(event) {	
 			event.preventDefault();
 			detect = false;
+			$(zombie).css('background-image', 'url("img/zombie1.png")');
 
 		  });
 
