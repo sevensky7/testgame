@@ -26,7 +26,7 @@
 </head>
 <body>
 
-<div id='viewport' height='480' width='800'><div id="nom" class="nomnom"></div>
+<div id='viewport' height='480' width='800'><div id="nom" class="nomnom"></div><div id="wipeout" class="wipeout"></div><div id="frenzy" class="frenzy"></div>
 <div class="bump" id="bump"></div>
 						<div class="frenzyBar" id="frenzyBar"></div>
 						<div class="x1" id="x1"></div>
@@ -64,6 +64,8 @@ var scaleH = scaledHeight / 480;
 
 
 var nom = document.getElementById("nom");
+var wipeout = document.getElementById("wipeout");
+var frenzy = document.getElementById("frenzy");
 var brainPassed = document.getElementById("bump");
 
 var lifes = 3;
@@ -263,10 +265,17 @@ if (j< specials.length) {
 					   specials[i].style.visibility="hidden";
 					   score+=150;
 					   comboCounter+=1;
-					   $(nom).fadeIn();
-					   $(nom).css('visibility', 'visible');
-					   $(nom).fadeOut();
-					   $(nom).css('visibility', 'false');
+					   $(wipeout).fadeIn('slow');
+					   $(wipeout).css('visibility', 'visible');
+					   $(wipeout).fadeOut('slow');
+					   $(wipeout).css('visibility', 'false');
+					   len = candies.length;
+						while (len--){
+						candies[len].destroy();
+						candies.splice(len,1);
+						candyCount--;
+							
+						}
 					}
 		}
 }
@@ -334,7 +343,7 @@ var specialCount = 0;
 var has3d = ('WebKitCSSMatrix' in window && 'm11' in new WebKitCSSMatrix());
 if (window.console) console.log ('Browser is capable of CSS3 transform3d:'+has3d);
 // but should we use it?
-var use3d = true;
+var use3d = false;
 
 // ensure that we have requestAnimationFrame
 // this is Paul Irish's compatibility shim
@@ -699,7 +708,6 @@ function difficulty()
 		  bOccurence=0.009;
 		  cOccurence=0.006;
 		  bfOccurence=0.002;
-		  //zombie_mouth.y+=400;
 		} 
 		else if ((score > 700) && (score < 1500)){
 		  bOccurence=0.011;
@@ -723,6 +731,8 @@ function difficulty()
 		} 
 		
 		if (comboCounter >= 10){
+		  $(frenzy).fadeIn('slow');
+		  $(frenzy).css('visibility', 'visible');
 		  bOccurence=0.04;
 		  cOccurence=0.009;
 		  bfOccurence=0.00;
@@ -730,6 +740,8 @@ function difficulty()
 	
 	
 		if (comboCounter == 0) {
+		 $(frenzy).fadeOut('slow');
+		  $(frenzy).css('visibility', 'false');
 		$(frenzy_bar).css('background-image', 'url(img/0.png)');
 		}
 		else if (comboCounter == 1) {

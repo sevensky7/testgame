@@ -573,6 +573,36 @@ border:0;
 z-index:6;
  }
  
+.wipeout{
+visibility:hidden;
+background-image:url('../img/wipeout.png');
+background-size:100% 100%;
+background-repeat:no-repeat;
+width:100%;
+height:100%;
+left:0%;
+top:0%;
+position:absolute;
+padding-top:10%;
+border:0;
+z-index:6;
+ }
+ 
+ .frenzy{
+visibility:hidden;
+background-image:url('../img/frenzy.png');
+background-size:100% 100%;
+background-repeat:no-repeat;
+width:100%;
+height:100%;
+left:0%;
+top:0%;
+position:absolute;
+padding-top:10%;
+border:0;
+z-index:6;
+ }
+ 
 .bump{
 visibility:hidden;
 background-image:url('../img/wall.png');
@@ -585,7 +615,7 @@ top:10%;
 position:absolute;
 padding-top:10%;
 border:0;
-z-index:6;
+z-index:10;
  }
  
 .x1{
