@@ -481,8 +481,8 @@ function Sprite(parentElement)
 		this.x = viewportW;
 		this.y = Math.round(viewportH/2);
 
-		scaledHeight = $(viewport).height();
-		scaledWidth = $(viewport).width();
+		scaledHeight = $(viewport).innerHeight();
+		scaledWidth = $(viewport).innerWidth();
 		
 		this.width=Math.round(scaledWidth*0.13);
 		this.height=Math.round(scaledHeight*0.16);
