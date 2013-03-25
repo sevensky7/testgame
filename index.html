@@ -19,6 +19,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
+<script type="text/javascript" src="appmobi.js"></script>
 <script type="text/javascript" src="jquery-1.6.4.min.js"></script>
 <script type="text/javascript" src="jquery-collision.min.js"></script>
 <script type="text/javascript" src="jcanvas.min.js"></script>
@@ -38,6 +39,16 @@
 <div id='stats'></div>
 
 <script type='text/javascript'>
+/*
+document.addEventListener("appMobi.device.ready",function(){
+        //lock the application in portrait orientation
+        AppMobi.device.setRotateOrientation("landscape");
+    AppMobi.device.setAutoRotate(false);
+
+    //hide splash screen
+    AppMobi.device.hideSplashScreen();  
+},false);  
+*/
 
 // grab the DOM elements we want to manipulate
 var viewport = document.getElementById('viewport');
@@ -343,7 +354,7 @@ var specialCount = 0;
 var has3d = ('WebKitCSSMatrix' in window && 'm11' in new WebKitCSSMatrix());
 if (window.console) console.log ('Browser is capable of CSS3 transform3d:'+has3d);
 // but should we use it?
-var use3d = false;
+var use3d = true;
 
 // ensure that we have requestAnimationFrame
 // this is Paul Irish's compatibility shim
@@ -357,7 +368,7 @@ if (!window.requestAnimationFrame)
 		window.msRequestAnimationFrame ||
 		function(callback,element) 
 		{
-			window.setTimeout(callback, 1000 / 30);
+			window.setTimeout(callback, 1000 / 60);
 		};
 	})();
 }
