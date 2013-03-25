@@ -58,12 +58,12 @@ var stats = document.getElementById('stats');
 var playbutton = document.getElementById('playbutton');
 var mouth = new Mouth();
 var zombie = document.getElementById('zombie_dude');
-var scaledHeight = $(viewport).height();
-var scaledWidth = $(viewport).width();
+var scaledHeight = $(viewport).innerHeight();
+var scaledWidth = $(viewport).innerWidth();
 var canvasElement = document.getElementById('canvas');
 var canvas = canvasElement.getContext("2d")
-var canvas_width = canvasElement.width;
-var canvas_height = canvasElement.height;
+var canvas_width = $(canvasElement).innerWidth();
+var canvas_height = $(canvasElement).innerHeight();
 var frenzy_bar = document.getElementById("frenzyBar");
 
 var x1 = document.getElementById("x1");
@@ -481,8 +481,8 @@ function Sprite(parentElement)
 		this.x = viewportW;
 		this.y = Math.round(viewportH/2);
 
-		scaledHeight = $(viewport).height();
-		scaledWidth = $(viewport).width();
+		scaledHeight = $(viewport).innerHeight();
+		scaledWidth = $(viewport).innerWwidth();
 		
 		this.width=Math.round(scaledWidth*0.13);
 		this.height=Math.round(scaledHeight*0.16);
@@ -514,8 +514,8 @@ function SpecialBrain(parentElement)
 	this.x = viewportW;
 	this.y = Math.round(viewportH/2);
 
-	scaledHeight = $(viewport).height();
-	scaledWidth = $(viewport).width();
+	scaledHeight = $(viewport).innerHeight();
+	scaledWidth = $(viewport).innerWidth();
 		
 	this.width=Math.round(scaledWidth*0.13);
 	this.height=Math.round(scaledHeight*0.16);
@@ -563,8 +563,8 @@ function Sprite2(parentElement)
 		this.x = viewportW;
 		this.y = Math.round(viewportH/2);
 
-		scaledHeight = $(viewport).height();
-		scaledWidth = $(viewport).width();
+		scaledHeight = $(viewport).innerHeight();
+		scaledWidth = $(viewport).innerWidth();
 		
 		this.width=Math.round(scaledWidth*0.12);
 		this.height=Math.round(scaledHeight*0.19);
@@ -598,8 +598,8 @@ function Mouth(parentElement)
 	// random starting position
 // regular sprite in the viewport
 	
-		scaledHeight = $(viewport).height();
-		scaledWidth = $(viewport).width();
+		scaledHeight = $(viewport).innerHeight();
+		scaledWidth = $(viewport).innerWidth();
 	
 		this.x = Math.round(scaledWidth*0.09);
 		this.y = Math.round(viewportH/2);
