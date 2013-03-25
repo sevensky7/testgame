@@ -482,7 +482,7 @@ function Sprite(parentElement)
 		
 	this.reposition();
 	// give it a random speed
-	this.xSpeed = -(Math.round(Math.random() * (8 - 2 + 1)) + 4);
+	this.xSpeed = -(Math.round(Math.random() * (5 - 2 + 1)) + 2);
 	this.ySpeed = 0;
 	// random spritesheet frame
 	//this.frame(brainCount);
@@ -638,7 +638,7 @@ function animateSprites()
 	for (var loop=0; loop < candyCount; loop++)
 	{
 	
-		candies[loop].ySpeed = Math.round( -7 * Math.sin(candies[loop].age * Math.PI / 120));
+		candies[loop].ySpeed = Math.round( -1.7 * Math.sin(candies[loop].age * Math.PI / 120));
 		candies[loop].age++;
 		
 		candies[loop].x += candies[loop].xSpeed;
