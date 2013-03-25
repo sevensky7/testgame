@@ -18,38 +18,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<style type="text/css">
-	body { margin:0; padding:0; border:0; background:black; overflow:hidden; }
-	div { position:absolute; margin:0; padding:0; border:0; outline:0; 
-		font-family:arial; font-size:12px; color:white; text-align:center; }
-	#playbutton { position:absolute; top:50%; left:50%; margin-left:-137px; 
-		margin-top:-25px; width:256px; height:32px; padding:16px; border-radius:16px; 
-		border:2px solid black; background:#666666; color:white; 
-		text-decoration:none; display:block; font-size:32px; line-height:32px; 
-		font-family:arial; font-weight:bold; text-align:center; }
-	#playbutton:hover { background:red; }
-	#viewport { width:100%; height:100%; overflow:hidden; 
-		top:0%; left:0%; display:block;}
-	#level { width:100%; height:100%; top:0px; left:0px;}
-	#background { width:100%; height:100%; top:0px; left:0px; 
-		background:url(bgtile.jpg); background-size: 100% 100%; }
-	.brain {background: url('brain2.png') no-repeat; background-size: 100% 100%; width:12%; height:10%;z-index:11;}
-	.candy {background-size: 100% 100%; width:9%; height:15%;z-index:11;}
-	.mouth {width:3%;height:15%;left:5%;top:45%;z-index:10;}
-	#zombie {background-image: url('img/zombie1.png'); background-size: 100% 100%; width:18%;height:100%;left:2%;top:1%;z-index:9;}
-	#stats {top:5%; left: 85%;z-index:0; -webkit-touch-callout: none;
--webkit-user-select: none;
--khtml-user-select: none;
--moz-user-select: none;
--ms-user-select: none;
-user-select: none;}
-</style>
+
 <script type="text/javascript" src="jquery-1.6.4.min.js"></script>
 <script type="text/javascript" src="jquery-collision.min.js"></script>
+<script type="text/javascript" src="jcanvas.min.js"></script>
+<link rel="stylesheet" href="css/stylesheet.css"/> 
 </head>
 <body>
 
-<div id='viewport' height='480' width='800'><div id='background'><div id='level'><div id="zombie"></div><div id="stats"></div></div></div></div>
+<div id='viewport' height='480' width='800'><div id="nom" class="nomnom"></div>
+<div class="bump" id="bump"></div>
+						<div class="frenzyBar" id="frenzyBar"></div>
+						<div class="x1" id="x1"></div>
+						<div class="x2" id="x2"></div>
+						<div class="x3" id="x3"></div><canvas id="canvas"></canvas><div id='background' class="gameplay_screen"><div id='level'><div id="zombie_dude" class="zombie_g"></div><div id="stats"></div></div></div></div>
 
 <a id='playbutton' href='javascript:startBenchmark()'>Click to start</a>
 
@@ -64,21 +46,85 @@ var background = document.getElementById('background');
 var stats = document.getElementById('stats');
 var playbutton = document.getElementById('playbutton');
 var mouth = new Mouth();
-var zombie = document.getElementById('zombie');
+var zombie = document.getElementById('zombie_dude');
 var scaledHeight = $(viewport).height();
 var scaledWidth = $(viewport).width();
+var canvasElement = document.getElementById('canvas');
+var canvas = canvasElement.getContext("2d")
+var canvas_width = canvasElement.width;
+var canvas_height = canvasElement.height;
+var frenzy_bar = document.getElementById("frenzyBar");
 
+var x1 = document.getElementById("x1");
+var x2 = document.getElementById("x2");
+var x3 = document.getElementById("x3");
 
-		
 var scaleW = scaledWidth / 800;
 var scaleH = scaledHeight / 480;
 
 
+var nom = document.getElementById("nom");
+var brainPassed = document.getElementById("bump");
 
-
+var lifes = 3;
 var score = 0;
+var isPaused = 1;
+var comboCounter = 0;
+
+
+var bOccurence=0;
+var cOccurence=0;
+var bfOccurence=0;
+
+
+
+	var paused = document.getElementById("button_pause");
+		var right = document.getElementById("button_right");
+		var left = document.getElementById("button_left");
+		
+		var started = document.getElementById("overlay_begin");
+		
+		var play = document.getElementById("button_play");
+		var restart = document.getElementById("button_restart");
+		var exit = document.getElementById("button_exit");
+		
+		
+		
+		
+		$(play).click(function() {
+		isPaused=0;	
+		$(started).toggle();
+		$(zombie).toggleClass("paused"); 
+		});
+		
+	
+		
+		
+		$(paused).click(function() {
+			isPaused=1;
+			$(started).toggle();
+			$(play).show();
+		    $(exit).show();
+			$(zombie).toggleClass("paused"); 
+		});
+		
+		
+		$(right).click(function() {
+		$(choose_zombie).css('background-image', 'url(img/zombie3.png)');
+		$(zombie).css('background-image', 'url(img/zombie3.png)');
+		localStorage.setItem(2,1);
+		});
+		
+		$(left).click(function() {
+		$(choose_zombie).css('background-image', 'url(img/zombie1.png)');
+		$(zombie).css('background-image', 'url(img/zombie1.png)');
+		localStorage.setItem(2,0);
+		});
+		
+		
+
 				
-//----------------------------------------------MOVEMENT
+//----------------------------------------------NAVIGATION
 
 var detect = false;	
 var support = Math.round(2.3*mouth.height);
@@ -91,11 +137,21 @@ var support = Math.round(2.3*mouth.height);
 		  });
  $(viewport).bind("mousedown", function(event) {	
 			detect = true;
-			$(zombie).css('background-image', 'url("img/zombie2.png")');
+			if (localStorage.getItem(2) == 0){
+						$(zombie).css('background-image', 'url(img/zombie2.png)');
+				}
+			if (localStorage.getItem(2) == 1){
+						$(zombie).css('background-image', 'url(img/zombie4.png)');
+				}
 		  });
  $(viewport).bind("mouseup", function(event) {	
 			detect = false;
-			$(zombie).css('background-image', 'url("img/zombie1.png")');
+			if (localStorage.getItem(2) == 0){
+						$(zombie).css('background-image', 'url(img/zombie1.png)');
+				}
+			if (localStorage.getItem(2) == 1){
+						$(zombie).css('background-image', 'url(img/zombie3.png)');
+				}
 		  });
 		 
  $(viewport).bind("touchmove", function(event) {	
@@ -112,16 +168,66 @@ var support = Math.round(2.3*mouth.height);
 		   $(viewport).bind("touchstart", function(event) {	
 			event.preventDefault();
 			detect = true;
-			$(zombie).css('background-image', 'url("img/zombie2.png")');
+			if (localStorage.getItem(2) == 0){
+						$(zombie).css('background-image', 'url(img/zombie2.png)');
+				}
+			if (localStorage.getItem(2) == 1){
+						$(zombie).css('background-image', 'url(img/zombie4.png)');
+				}
 		  });
 		  
 		   $(viewport).bind("touchend", function(event) {	
 			event.preventDefault();
 			detect = false;
-			$(zombie).css('background-image', 'url("img/zombie1.png")');
+			if (localStorage.getItem(2) == 0){
+						$(zombie).css('background-image', 'url(img/zombie1.png)');
+				}
+			if (localStorage.getItem(2) == 1){
+						$(zombie).css('background-image', 'url(img/zombie3.png)');
+				}
 
 		  });
 
+
+//---------------------------------------------VISUAL OF ZOMBIE
+
+	if (localStorage.getItem(1) === null) {
+		  localStorage.setItem(1,0)
+		}
+				
+		var best_score = localStorage.getItem(1);
+		
+		if (localStorage.getItem(2) === null) {
+		  localStorage.setItem(2,0)
+		}
+		
+		if (localStorage.getItem(2) == 0){
+		$(zombie).css('background-image', 'url(img/zombie1.png)');
+		}
+		
+		if (localStorage.getItem(2) == 1){
+		$(zombie).css('background-image', 'url(img/zombie3.png)');
+		}		  
+		  
+//---------------------------------------------SCORE
+
+var score_update = function() {
+			  canvas.clearRect(0, 0, canvas_width, canvas_height);
+			  $(canvasElement).drawText({
+			  fillStyle: "#8c9f98",
+			  x: 1, y: 1, fromCenter: false,
+			  font: "50pt londrina",
+			  text: score.toString()
+			});
+        };		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  
+		  
 //----------------------------------------------COLLISION DETECTION	 
 		  
  function collides(a, b) {
@@ -132,7 +238,7 @@ var support = Math.round(2.3*mouth.height);
         }
 		
 function handleCollisions(){
-var j =1;
+var j =0;
 if (j< brains.length) {
 
 		for (var i = 0; i < brains.length; ++i) {
@@ -140,6 +246,27 @@ if (j< brains.length) {
 					   brains[i].active = false;
 					   brains[i].style.visibility="hidden";
 					   score+=10;
+					   comboCounter+=1;
+					    $(nom).fadeIn();
+						 $(nom).css('visibility', 'visible');
+						 $(nom).fadeOut();
+						 $(nom).css('visibility', 'false');
+					}
+		}
+}
+
+if (j< specials.length) {
+
+		for (var i = 0; i < specials.length; ++i) {
+			 if((detect == true) && (collides(specials[i],mouth)) && (specials[i].active == true)){
+					   specials[i].active = false;
+					   specials[i].style.visibility="hidden";
+					   score+=150;
+					   comboCounter+=1;
+					   $(nom).fadeIn();
+					   $(nom).css('visibility', 'visible');
+					   $(nom).fadeOut();
+					   $(nom).css('visibility', 'false');
 					}
 		}
 }
@@ -151,6 +278,38 @@ if (j< candies.length) {
 					   candies[i].active = false;
 					   candies[i].style.visibility="hidden";
 					   score-=10;
+					   comboCounter=0;
+					     if (lifes == 3){
+						  $(x1).fadeIn();
+						  $(x1).css('visibility', 'visible');
+						  lifes-=1;
+						  }
+						  else if (lifes ==2){
+							  $(x2).fadeIn();
+							  $(x2).css('visibility', 'visible');
+							  lifes-=1;
+						  }
+						  else if (lifes ==1){
+							  $(x3).fadeIn();
+							  $(x3).css('visibility', 'visible');
+							  isPaused=1;
+							  $(started).fadeToggle();
+							  lifes=3;
+							  
+							  if (score > best_score){
+							  localStorage.setItem (1, score + 10);
+							  best_Score = localStorage.getItem (1, score +10);
+							  }
+							  
+							  
+							  score=0;
+							  $(x1).fadeToggle();
+							  $(x2).fadeToggle();
+							  $(x3).fadeToggle();
+							  //$(play).hide();
+							  //$(exit).hide();
+							  //$(zombie_gameplay).toggleClass("paused"); 			  
+						  }
 					}
 		}
 }
@@ -168,6 +327,8 @@ var brainCount = 0;
 var candies = [];
 var candyCount = 0;
 
+var specials = [];
+var specialCount = 0;
 
 // can this web brower handle CSS3 transforms (to trigger HW accel?)
 var has3d = ('WebKitCSSMatrix' in window && 'm11' in new WebKitCSSMatrix());
@@ -207,6 +368,13 @@ function addCandy()
 			candyCount++;
 }
 
+function addSpecial()
+{
+			// add one new animated sprite
+			specials[specialCount] = new SpecialBrain();
+			specialCount++;
+}
+
 // measure the framerate and add/remove brains
 // depending on how fast we're animating
 function addItems() 
@@ -214,13 +382,21 @@ function addItems()
 		// add more brains if possible
 		// only done once per second so we aren't touching
 		// the DOM every single frame
-		if(brainCount < 30){
-		if(Math.random() < 0.019) {
+	if(brainCount < 30){
+		if(Math.random() < bOccurence) {
 			//brains.push(Brain());
 			addBrain();
 		}
+		
+		if(specialCount < 1){
+		if(Math.random() < bfOccurence) {
+			//brains.push(Brain());
+			addSpecial();
+		}
+		}
+		
 		if(candyCount < 5){
-		if(Math.random() < 0.006) {
+		if(Math.random() < cOccurence) {
 			//brains.push(Brain());
 			addCandy();
 		}
@@ -288,8 +464,8 @@ function Sprite(parentElement)
 		scaledHeight = $(viewport).height();
 		scaledWidth = $(viewport).width();
 		
-		this.width=Math.round(scaledWidth*0.15);
-		this.height=Math.round(scaledHeight*0.1);
+		this.width=Math.round(scaledWidth*0.13);
+		this.height=Math.round(scaledHeight*0.16);
 		
 		this.age = Math.round(Math.random() * 32);
 		
@@ -302,6 +478,37 @@ function Sprite(parentElement)
 	// random spritesheet frame
 	//this.frame(brainCount);
 	// put it into the game window
+	this.parent.appendChild(this.element);
+}
+
+function SpecialBrain(parentElement)
+{
+
+	this.reposition = repositionSprite;
+	this.destroy = destroySprite;
+	this.parent = parentElement ? parentElement : viewport;
+	this.element = document.createElement("div");
+	this.element.className = 'special';
+	this.style = this.element.style;
+	
+	this.x = viewportW;
+	this.y = Math.round(viewportH/2);
+
+	scaledHeight = $(viewport).height();
+	scaledWidth = $(viewport).width();
+		
+	this.width=Math.round(scaledWidth*0.13);
+	this.height=Math.round(scaledHeight*0.16);
+		
+	this.age = Math.round(Math.random() * 32);
+		
+	this.active = true;
+		
+	this.reposition();
+
+	this.xSpeed = -(Math.round(Math.random() * (8 - 2 + 1)) + 4);
+	this.ySpeed = 0;
+
 	this.parent.appendChild(this.element);
 }
 
@@ -339,8 +546,8 @@ function Sprite2(parentElement)
 		scaledHeight = $(viewport).height();
 		scaledWidth = $(viewport).width();
 		
-		this.width=Math.round(scaledWidth*0.15);
-		this.height=Math.round(scaledHeight*0.1);
+		this.width=Math.round(scaledWidth*0.12);
+		this.height=Math.round(scaledHeight*0.19);
 		
 		this.age = Math.round(Math.random() * 32);
 		
@@ -374,11 +581,11 @@ function Mouth(parentElement)
 		scaledHeight = $(viewport).height();
 		scaledWidth = $(viewport).width();
 	
-		this.x = Math.round(scaledWidth*0.06);
+		this.x = Math.round(scaledWidth*0.09);
 		this.y = Math.round(viewportH/2);
 		
-		this.width=Math.round(scaledWidth*0.03);
-		this.height=Math.round(scaledHeight*0.15);
+		this.width=Math.round(scaledWidth*0.07);
+		this.height=Math.round(scaledHeight*0.2);
 		
 		this.reposition();
 	// put it into the game window
@@ -388,7 +595,7 @@ function Mouth(parentElement)
 
 
 
-
+//---------------------------------------------------MOVEMENT
 
 // update the positions of each sprite
 function animateSprites()
@@ -396,7 +603,7 @@ function animateSprites()
 	for (var loop=0; loop < brainCount; loop++)
 	{
 	
-		brains[loop].ySpeed = Math.round( -2.3 * Math.sin(brains[loop].age * Math.PI / 240));
+		brains[loop].ySpeed = Math.round( -2.3 * Math.sin(brains[loop].age * Math.PI / 50));
 		brains[loop].age++;
 		
 		brains[loop].x += brains[loop].xSpeed;
@@ -404,6 +611,20 @@ function animateSprites()
 
 		brains[loop].reposition();	
 	}
+	
+	
+	for (var loop=0; loop < specialCount; loop++)
+	{
+	
+		specials[loop].ySpeed = Math.round( -2.3 * Math.sin(specials[loop].age * Math.PI / 50));
+		specials[loop].age++;
+		
+		specials[loop].x += specials[loop].xSpeed;
+		specials[loop].y += specials[loop].ySpeed;
+
+		specials[loop].reposition();	
+	}
+	
 	
 	for (var loop=0; loop < candyCount; loop++)
 	{
@@ -419,6 +640,8 @@ function animateSprites()
 }
 
 
+//----------------------------------------------------CLEAR UNUSED SPRITES
+
 function clearSprites()
 {
 var len = brains.length;
@@ -426,9 +649,18 @@ var len = brains.length;
 	while (len--) {
 
 			if (brains[len].x < 0 || brains[len].x > viewportW){
+			if (brains[len].active == true)
+			{
+			comboCounter=0;
+			$(brainPassed).fadeIn();
+					  $(brainPassed).css('visibility', 'visible');
+					  $(brainPassed).fadeOut();
+					  $(brainPassed).css('visibility', 'false');
+			}
 					brains[len].destroy();
 					brains.splice(len,1);
 					brainCount--;
+
 			}
 	}
 	
@@ -442,32 +674,148 @@ len = candies.length;
 			}
 	}
 
+len = specials.length;
+
+	while (len--){
+		if (specials[len].x < 0 || specials[len].x > viewportW){
+					specials[len].destroy();
+					specials.splice(len,1);
+					specialCount--;
+			}
+	}
+	
+}
+
+//--------------------------------------------------------------DIFFICULTY
+
+function difficulty()
+{
+   if (score < 100){
+		  bOccurence=0.007;
+		  cOccurence=0.003;
+		  bfOccurence=0.001;
+		} 
+		else if ((score > 100) && (score < 700)){
+		  bOccurence=0.009;
+		  cOccurence=0.006;
+		  bfOccurence=0.002;
+		  //zombie_mouth.y+=400;
+		} 
+		else if ((score > 700) && (score < 1500)){
+		  bOccurence=0.011;
+		  cOccurence=0.008;
+		  bfOccurence=0.003;
+		} 
+		else if ((score > 1500) && (score < 2200)){
+		  bOccurence=0.013;
+		  cOccurence=0.018;
+		  bfOccurence=0.005;
+		} 
+		else if ((score > 2200) && (score < 3000)){
+		  bOccurence=0.016;
+		  cOccurence=0.021;
+		  bfOccurence=0.006;
+		} 
+		else if (score > 3000){
+		  bOccurence=0.024;
+		  cOccurence=0.035;
+		  bfOccurence=0.007;
+		} 
+		
+		if (comboCounter >= 10){
+		  bOccurence=0.04;
+		  cOccurence=0.009;
+		  bfOccurence=0.00;
+		  }
+	
+	
+		if (comboCounter == 0) {
+		$(frenzy_bar).css('background-image', 'url(img/0.png)');
+		}
+		else if (comboCounter == 1) {
+		$(frenzy_bar).css('background-image', 'url(img/1.png)');
+		}
+		else if (comboCounter==2) {
+		$(frenzy_bar).css('background-image', 'url(img/2.png)');
+		}
+		else if (comboCounter==3) {
+		$(frenzy_bar).css('background-image', 'url(img/3.png)');
+		}
+		else if (comboCounter==4) {
+		$(frenzy_bar).css('background-image', 'url(img/4.png)');
+		}
+		else if (comboCounter==5) {
+		$(frenzy_bar).css('background-image', 'url(img/5.png)');
+		}
+		else if (comboCounter==6) {
+		$(frenzy_bar).css('background-image', 'url(img/6.png)');
+		}
+		else if (comboCounter==7) {
+		$(frenzy_bar).css('background-image', 'url(img/7.png)');
+		}
+		else if (comboCounter==8) {
+		$(frenzy_bar).css('background-image', 'url(img/8.png)');
+		}
+		else if (comboCounter==9) {
+		$(frenzy_bar).css('background-image', 'url(img/9.png)');
+		}
+		else if (comboCounter>=10) {
+		$(frenzy_bar).css('background-image', 'url(img/10.png)');
+		}
+	
 }
 
 
+
+
 // run each frame
-function animate() 
+(function animate() 
 {
+requestAnimationFrame(animate);
+if (isPaused == 0){
 	// call this function again asap
-	requestAnimationFrame(animate);
+	
 	// measure time and add or remove brains
 	addItems();
 	handleCollisions();
 	// bounce the brains around and scroll the level
 	animateSprites();
 	clearSprites();
-    $(stats).html("Score: " + score); 
+    //$(stats).html("Score: " + score); 
 	mouth.reposition();
-	
+	score_update();
+	difficulty();
+	//$(last_score).html("Score: " + score + "<br />" + "Best Score: " + localStorage.getItem(1)); 
 }
+})();
 
 // start your engines!
 function startBenchmark()
 {
-	playbutton.style.display = 'none';
-	animate();
+if (isPaused == 1){
+isPaused = 0;
+playbutton.style.display="none";
 }
+else{
+isPaused = 1;
+playbutton.style.display="none";
+}
+}
+/*
+window.onload = function(){
+	
+			paused.on('click', function(){
+				if (isPaused === 0) { 
+					isPaused = 1;
+				}
+				
+				else { 
+					 isPaused = 0;
+				}
+			});
 
+		};
+*/
 </script>
 
 </body>
